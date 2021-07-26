@@ -11,7 +11,6 @@ var ErrRange = errors.New("range error")
 type DataReader struct {
 	buffer     []byte
 	byteOffset uint32
-	err        error
 }
 
 func NewDataReader(buffer []byte) DataReader {

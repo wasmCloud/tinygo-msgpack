@@ -107,9 +107,23 @@ func (d *Decoder) ReadInt64() (int64, error) {
 	case FormatInt64:
 		v, err := d.reader.GetInt64()
 		return int64(v), err
-	default:
-		return 0, ReadError{"bad prefix for int64"}
+	case FormatUint8:
+		v, err := d.reader.GetUint8()
+		return int64(v), err
+	case FormatUint16:
+		v, err := d.reader.GetUint16()
+		return int64(v), err
+	case FormatUint32:
+		v, err := d.reader.GetUint32()
+		return int64(v), err
+	case FormatUint64:
+		v, err := d.reader.GetUint64()
+		if v <= math.MaxInt64 {
+			return int64(v), err
+		}
+		return 0, ReadError{"interger overflow: value = " + strconv.FormatUint(v, 10) + "; type = i64"}
 	}
+	return 0, ReadError{"bad prefix for int64"}
 }
 
 func (d *Decoder) ReadUint8() (uint8, error) {
@@ -122,7 +136,7 @@ func (d *Decoder) ReadUint8() (uint8, error) {
 	}
 	return 0, ReadError{
 		"interger overflow: value = " +
-			strconv.FormatUint(v, 64) +
+			strconv.FormatUint(v, 10) +
 			"; bits = 8",
 	}
 }
@@ -137,7 +151,7 @@ func (d *Decoder) ReadUint16() (uint16, error) {
 	}
 	return 0, ReadError{
 		"interger overflow: value = " +
-			strconv.FormatUint(v, 64) +
+			strconv.FormatUint(v, 10) +
 			"; bits = 16",
 	}
 }
@@ -152,7 +166,7 @@ func (d *Decoder) ReadUint32() (uint32, error) {
 	}
 	return 0, ReadError{
 		"interger overflow: value = " +
-			strconv.FormatUint(v, 64) +
+			strconv.FormatUint(v, 10) +
 			"; bits = 32",
 	}
 }
@@ -181,9 +195,33 @@ func (d *Decoder) ReadUint64() (uint64, error) {
 	case FormatUint64:
 		v, err := d.reader.GetUint64()
 		return uint64(v), err
-	default:
-		return 0, ReadError{"bad prefix for uint64"}
+	case FormatInt8:
+		v, err := d.reader.GetInt8()
+		if v >= 0 {
+			return uint64(v), err
+		}
+		return 0, ReadError{"interger underflow: value = " + strconv.FormatInt(int64(v), 10) + "; type = u64"}
+	case FormatInt16:
+		v, err := d.reader.GetInt16()
+		if v >= 0 {
+			return uint64(v), err
+		}
+		return 0, ReadError{"interger underflow: value = " + strconv.FormatInt(int64(v), 10) + "; type = u64"}
+	case FormatInt32:
+		v, err := d.reader.GetInt32()
+		if v >= 0 {
+			return uint64(v), err
+		}
+		return 0, ReadError{"interger underflow: value = " + strconv.FormatInt(int64(v), 10) + "; type = u64"}
+	case FormatInt64:
+		v, err := d.reader.GetInt64()
+		if v >= 0 {
+			return uint64(v), err
+		}
+		return 0, ReadError{"interger underflow: value = " + strconv.FormatInt(v, 10) + "; type = u64"}
 	}
+
+	return 0, ReadError{"bad prefix for uint64"}
 }
 
 func (d *Decoder) ReadFloat32() (float32, error) {
@@ -195,6 +233,37 @@ func (d *Decoder) ReadFloat32() (float32, error) {
 	if prefix == FormatFloat32 {
 		return d.reader.GetFloat32()
 	}
+
+	if isFixedInt(prefix) || isNegativeFixedInt(prefix) {
+		return float32(int8(prefix)), nil
+	}
+	switch prefix {
+	case FormatInt8:
+		v, err := d.reader.GetInt8()
+		return float32(v), err
+	case FormatInt16:
+		v, err := d.reader.GetInt16()
+		return float32(v), err
+	case FormatInt32:
+		v, err := d.reader.GetInt32()
+		return float32(v), err
+	case FormatInt64:
+		v, err := d.reader.GetInt64()
+		return float32(v), err
+	case FormatUint8:
+		v, err := d.reader.GetUint8()
+		return float32(v), err
+	case FormatUint16:
+		v, err := d.reader.GetUint16()
+		return float32(v), err
+	case FormatUint32:
+		v, err := d.reader.GetUint32()
+		return float32(v), err
+	case FormatUint64:
+		v, err := d.reader.GetUint64()
+		return float32(v), err
+	}
+
 	return 0, ReadError{"bad prefix for float32"}
 }
 
@@ -206,7 +275,41 @@ func (d *Decoder) ReadFloat64() (float64, error) {
 
 	if prefix == FormatFloat64 {
 		return d.reader.GetFloat64()
+	} else if prefix == FormatFloat32 {
+		v, err := d.reader.GetFloat32()
+		return float64(v), err
 	}
+
+	if isFixedInt(prefix) || isNegativeFixedInt(prefix) {
+		return float64(int8(prefix)), nil
+	}
+	switch prefix {
+	case FormatInt8:
+		v, err := d.reader.GetInt8()
+		return float64(v), err
+	case FormatInt16:
+		v, err := d.reader.GetInt16()
+		return float64(v), err
+	case FormatInt32:
+		v, err := d.reader.GetInt32()
+		return float64(v), err
+	case FormatInt64:
+		v, err := d.reader.GetInt64()
+		return float64(v), err
+	case FormatUint8:
+		v, err := d.reader.GetUint8()
+		return float64(v), err
+	case FormatUint16:
+		v, err := d.reader.GetUint16()
+		return float64(v), err
+	case FormatUint32:
+		v, err := d.reader.GetUint32()
+		return float64(v), err
+	case FormatUint64:
+		v, err := d.reader.GetUint64()
+		return float64(v), err
+	}
+
 	return 0, ReadError{"bad prefix for float64"}
 }
 
@@ -279,6 +382,8 @@ func (d *Decoder) readBinLength() (uint32, error) {
 	case FormatBin32:
 		v, err := d.reader.GetUint32()
 		return v, err
+	case FormatNil:
+		return 0, nil
 	}
 	return 0, ReadError{"bad prefix for binary length"}
 }
@@ -291,13 +396,15 @@ func (d *Decoder) ReadArraySize() (uint32, error) {
 
 	if isFixedArray(prefix) {
 		return uint32(prefix & FormatFourLeastSigBitsInByte), nil
-	} else if prefix == FormatArray16 {
+	}
+	switch prefix {
+	case FormatArray16:
 		v, err := d.reader.GetUint16()
 		return uint32(v), err
-	} else if prefix == FormatArray32 {
+	case FormatArray32:
 		v, err := d.reader.GetUint32()
 		return v, err
-	} else if prefix == FormatNil {
+	case FormatNil:
 		return 0, nil
 	}
 	return 0, ReadError{"bad prefix for array length"}
@@ -311,13 +418,15 @@ func (d *Decoder) ReadMapSize() (uint32, error) {
 
 	if isFixedMap(prefix) {
 		return uint32(prefix & FormatFourLeastSigBitsInByte), nil
-	} else if prefix == FormatMap16 {
+	}
+	switch prefix {
+	case FormatMap16:
 		v, err := d.reader.GetUint16()
 		return uint32(v), err
-	} else if prefix == FormatMap32 {
+	case FormatMap32:
 		v, err := d.reader.GetUint32()
 		return v, err
-	} else if prefix == FormatNil {
+	case FormatNil:
 		return 0, nil
 	}
 	return 0, ReadError{"bad prefix for map length"}
