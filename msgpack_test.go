@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	msgpack "github.com/wapc/tinygo-msgpack"
+	msgpack "github.com/wasmcloud/tinygo-msgpack"
 )
 
 type Required struct {
