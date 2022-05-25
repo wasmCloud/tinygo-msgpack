@@ -10,6 +10,10 @@ func NewSizer() Sizer {
 	return Sizer{}
 }
 
+func (s *Sizer) CheckError() error {
+	return nil
+}
+
 func (s *Sizer) Len() uint32 {
 	return s.length
 }

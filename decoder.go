@@ -470,6 +470,10 @@ type ReadError struct {
 	message string
 }
 
+func NewReadError(s string) ReadError {
+	return ReadError{ message: s }
+}
+
 func (e ReadError) Error() string {
 	return e.message
 }

@@ -14,6 +14,11 @@ func NewEncoder(buffer []byte) Encoder {
 	}
 }
 
+// check whether any errors have occurred
+func (e *Encoder) CheckError() error {
+	return e.reader.CheckError()
+}
+
 func (e *Encoder) WriteNil() {
 	e.reader.SetUint8(FormatNil)
 }
