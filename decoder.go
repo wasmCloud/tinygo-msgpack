@@ -249,6 +249,10 @@ func (d *Decoder) readStringLength() (uint32, error) {
 }
 
 func (d *Decoder) ReadByteArray() ([]byte, error) {
+	isNil, err := d.IsNextNil()
+	if isNil || err != nil {
+		return nil, err
+	}
 	binLen, err := d.readBinLength()
 	if err != nil {
 		return nil, err
@@ -471,7 +475,7 @@ type ReadError struct {
 }
 
 func NewReadError(s string) ReadError {
-	return ReadError{ message: s }
+	return ReadError{message: s}
 }
 
 func (e ReadError) Error() string {
